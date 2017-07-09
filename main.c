@@ -21,6 +21,7 @@ enum Phase
 	Phase_Title,
 	Phase_Game,
 	Phase_GameOver,
+	Phase_Win,
 };
 typedef enum Phase Phase;
 static Phase s_phase;
@@ -225,6 +226,26 @@ static BOOL Movable( void )
 	return FALSE;
 }
 
+static BOOL Win( void )
+{
+	int i;
+	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
+	{
+		if( s_grid[i] == 11 )
+		{
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+static void DrawRestartMessage( void )
+{
+	FontFuchi_SetType( 0 );
+	FontFuchi_SetPos( 4, 54 );
+	FontFuchi_PutStr( "PUSH A BUTTON TO RESTART" );
+}
+
 /// ‰Šú‰».
 void pceAppInit( void )
 {
@@ -263,6 +284,7 @@ void pceAppProc( int cnt )
 	{
 	case Phase_Title:
 	case Phase_GameOver:
+	case Phase_Win:
 		if( pcePadGet() & TRG_A )
 		{
 			StartGame();
@@ -301,9 +323,16 @@ void pceAppProc( int cnt )
 			}
 			if( moved )
 			{
-				s_adding_panel = AddRandomPanel();
-				PieceBmpAnimation_StartToEnd( &s_panel_anim, &s_panel_anim_bmp
-					, s_period, FALSE );
+				if( Win() )
+				{
+					s_phase = Phase_Win;
+				}
+				else
+				{
+					s_adding_panel = AddRandomPanel();
+					PieceBmpAnimation_StartToEnd( &s_panel_anim, &s_panel_anim_bmp
+						, s_period, FALSE );
+				}
 			}
 		}
 		break;
@@ -328,9 +357,12 @@ void pceAppProc( int cnt )
 		FontFuchi_SetType( 1 );
 		FontFuchi_SetPos( 28, 24 );
 		FontFuchi_PutStr( "GAME OVER" );
-		FontFuchi_SetType( 0 );
-		FontFuchi_SetPos( 4, 54 );
-		FontFuchi_PutStr( "PUSH A BUTTON TO RESTART" );
+		DrawRestartMessage();
+	case Phase_Win:
+		FontFuchi_SetType( 1 );
+		FontFuchi_SetPos( 22, 24 );
+		FontFuchi_PutStr( "YOU WIN !!" );
+		DrawRestartMessage();
 		break;
 	}
 	FontFuchi_SetType( 2 );
