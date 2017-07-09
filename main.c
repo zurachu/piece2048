@@ -66,11 +66,28 @@ static void StartGame( void )
 	s_phase = Phase_Game;
 }
 
-static void DrawRestartMessage( void )
+static int CenteringX( char const* message, int font_width )
+{
+	return ( DISP_X - strlen( message ) * font_width ) / 2;
+}
+
+static void DrawTitle( char const* message )
+{
+	FontFuchi_SetType( 1 );
+	FontFuchi_SetPos( CenteringX( message, 8 ), 24 );
+	FontFuchi_PutStr( message );
+}
+
+static void DrawPushButton( char const* message )
 {
 	FontFuchi_SetType( 0 );
-	FontFuchi_SetPos( 4, 54 );
-	FontFuchi_PutStr( "PUSH A BUTTON TO RESTART" );
+	FontFuchi_SetPos( CenteringX( message, 5 ), 54 );
+	FontFuchi_PutStr( message );
+}
+
+static void DrawRestartMessage( void )
+{
+	DrawPushButton( "PUSH A BUTTON TO RESTART" );
 }
 
 /// èâä˙âª.
@@ -168,25 +185,17 @@ void pceAppProc( int cnt )
 	switch( s_phase )
 	{
 	case Phase_Title:
-		FontFuchi_SetType( 1 );
-		FontFuchi_SetPos( 8, 24 );
-		FontFuchi_PutStr( "2048 for P/ECE" );
-		FontFuchi_SetType( 0 );
-		FontFuchi_SetPos( 9, 54 );
-		FontFuchi_PutStr( "PUSH A BUTTON TO START" );
+		DrawTitle( "2048 for P/ECE" );
+		DrawPushButton( "PUSH A BUTTON TO START" );
 		break;
 	case Phase_Game:
 		break;
 	case Phase_GameOver:
-		FontFuchi_SetType( 1 );
-		FontFuchi_SetPos( 28, 24 );
-		FontFuchi_PutStr( "GAME OVER" );
+		DrawTitle( "GAME OVER" );
 		DrawRestartMessage();
 		break;
 	case Phase_Win:
-		FontFuchi_SetType( 1 );
-		FontFuchi_SetPos( 22, 24 );
-		FontFuchi_PutStr( "YOU WIN !!" );
+		DrawTitle( "YOU WIN !!" );
 		DrawRestartMessage();
 		break;
 	}
