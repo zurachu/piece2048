@@ -16,6 +16,15 @@ static int s_grid[GRID_WIDTH * GRID_WIDTH];
 static int s_adding_panel;
 static int s_score;
 
+enum Phase
+{
+	Phase_Title,
+	Phase_Game,
+	Phase_GameOver,
+};
+typedef enum Phase Phase;
+static Phase s_phase;
+
 static int pow2( int n )
 {
 	int result = 1, i;
@@ -139,6 +148,7 @@ static void StartGame( void )
 		AddRandomPanel();
 	}
 	PieceBmpAnimation_Clear( &s_panel_anim );
+	s_phase = Phase_Game;
 }
 
 static BOOL MoveLeft( void )
@@ -200,6 +210,21 @@ static BOOL MoveDown( void )
 	return moved;
 }
 
+static BOOL Movable( void )
+{
+	int i;
+	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
+	{
+		if( s_grid[i] == 0
+			|| ( ( i + 1 ) % GRID_WIDTH != 0 && s_grid[i] == s_grid[i + 1] )
+			|| ( i / GRID_WIDTH + 1 < GRID_WIDTH && s_grid[i] == s_grid[i + GRID_WIDTH] ) )
+		{
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
 /// ‰Šú‰».
 void pceAppInit( void )
 {
@@ -233,49 +258,73 @@ void pceAppProc( int cnt )
 		pceAppReqExit( 0 );
 	}
 	
-	if( pcePadGet() & TRG_A )
+	switch( s_phase )
 	{
-		StartGame();
+	case Phase_Title:
+	case Phase_GameOver:
+		if( pcePadGet() & TRG_A )
+		{
+			StartGame();
+		}
+		break;
+	case Phase_Game:
+		if( PieceBmpAnimation_Playing( &s_panel_anim ) )
+		{
+			if( PieceBmpAnimation_IsEnd( &s_panel_anim ) )
+			{
+				PieceBmpAnimation_Clear( &s_panel_anim );
+				if( !Movable() )
+				{
+					s_phase = Phase_GameOver;
+				}
+			}
+			PieceBmpAnimation_Update( &s_panel_anim, s_period );
+		}
+		else
+		{
+			if( pcePadGet() & TRG_LF )
+			{
+				moved = MoveLeft();
+			}
+			else if( pcePadGet() & TRG_RI )
+			{
+				moved = MoveRight();
+			}
+			else if( pcePadGet() & TRG_UP )
+			{
+				moved = MoveUp();
+			}
+			else if( pcePadGet() & TRG_DN )
+			{
+				moved = MoveDown();
+			}
+			if( moved )
+			{
+				s_adding_panel = AddRandomPanel();
+				PieceBmpAnimation_StartToEnd( &s_panel_anim, &s_panel_anim_bmp
+					, s_period, FALSE );
+			}
+		}
+		break;
 	}
-	
 
-	if( PieceBmpAnimation_Playing( &s_panel_anim ) )
-	{
-		if( PieceBmpAnimation_IsEnd( &s_panel_anim ) )
-		{
-			PieceBmpAnimation_Clear( &s_panel_anim );
-		}
-		PieceBmpAnimation_Update( &s_panel_anim, s_period );
-	}
-	else
-	{
-		if( pcePadGet() & TRG_LF )
-		{
-			moved = MoveLeft();
-		}
-		else if( pcePadGet() & TRG_RI )
-		{
-			moved = MoveRight();
-		}
-		else if( pcePadGet() & TRG_UP )
-		{
-			moved = MoveUp();
-		}
-		else if( pcePadGet() & TRG_DN )
-		{
-			moved = MoveDown();
-		}
-		if( moved )
-		{
-			s_adding_panel = AddRandomPanel();
-			PieceBmpAnimation_StartToEnd( &s_panel_anim, &s_panel_anim_bmp
-				, s_period, FALSE );
-		}
-	}
-	
 	pceLCDPaint( 0, 0, 0, DISP_X, DISP_Y );
 	DrawGrid();
 	DrawScore();
+	switch( s_phase )
+	{
+	case Phase_Title:
+	case Phase_Game:
+		break;
+	case Phase_GameOver:
+		FontFuchi_SetType( 1 );
+		FontFuchi_SetPos( 28, 24 );
+		FontFuchi_PutStr( "GAME OVER" );
+		FontFuchi_SetType( 0 );
+		FontFuchi_SetPos( 4, 54 );
+		FontFuchi_PutStr( "PUSH A BUTTON TO RESTART" );
+		break;
+	}
 	FontFuchi_SetType( 2 );
 	FontFuchi_SetPos( 1, 80 );
 	FontFuchi_Printf( "%6lu/%6luus FREE:%8d", g_proc_us, g_period_us, pceHeapGetMaxFreeSize() );
