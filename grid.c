@@ -3,6 +3,8 @@
 int g_grid[GRID_WIDTH * GRID_WIDTH];
 int g_score;
 
+static int const s_win_panel = 11; // 2^11 = 2048
+
 static int pow2( int n )
 {
 	int result = 1, i;
@@ -164,7 +166,7 @@ BOOL Win( void )
 	int i;
 	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
 	{
-		if( g_grid[i] == 11 )
+		if( g_grid[i] == s_win_panel )
 		{
 			return TRUE;
 		}
