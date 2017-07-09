@@ -182,6 +182,7 @@ void pceAppProc( int cnt )
 		FontFuchi_SetPos( 28, 24 );
 		FontFuchi_PutStr( "GAME OVER" );
 		DrawRestartMessage();
+		break;
 	case Phase_Win:
 		FontFuchi_SetType( 1 );
 		FontFuchi_SetPos( 22, 24 );
