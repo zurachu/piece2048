@@ -40,6 +40,37 @@ static void InitGrid( void )
 	s_score = 0;
 }
 
+static void CopyGrid( int source[] )
+{
+	int i;
+	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
+	{
+		s_grid[i] = source[i];
+	}
+}
+
+static void FlipGridHorizontal( void )
+{
+	int flipped[GRID_WIDTH * GRID_WIDTH], i;
+	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
+	{
+		int const x = i % GRID_WIDTH, y = i / GRID_WIDTH;
+		flipped[i] = s_grid[( GRID_WIDTH - x - 1 ) + GRID_WIDTH * y];
+	}
+	CopyGrid(flipped);
+}
+
+static void TransposeGrid( void )
+{
+	int transposed[GRID_WIDTH * GRID_WIDTH], i;
+	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
+	{
+		int const x = i % GRID_WIDTH, y = i / GRID_WIDTH;
+		transposed[i] = s_grid[y + GRID_WIDTH * x];
+	}
+	CopyGrid(transposed);
+}
+
 static int NumEmptyGrids( void )
 {
 	int num_empty = 0, i;
@@ -135,6 +166,33 @@ static BOOL MoveLeft( void )
 	return moved;
 }
 
+static BOOL MoveRight( void )
+{
+	BOOL moved;
+	FlipGridHorizontal();
+	moved = MoveLeft();
+	FlipGridHorizontal();
+	return moved;
+}
+
+static BOOL MoveUp( void )
+{
+	BOOL moved;
+	TransposeGrid();
+	moved = MoveLeft();
+	TransposeGrid();
+	return moved;
+}
+
+static BOOL MoveDown( void )
+{
+	BOOL moved;
+	TransposeGrid();
+	moved = MoveRight();
+	TransposeGrid();
+	return moved;
+}
+
 /// ‰Šú‰».
 void pceAppInit( void )
 {
@@ -160,6 +218,7 @@ void pceAppInit( void )
 void pceAppProc( int cnt )
 {
 	PrecisionTimer timer;
+	BOOL moved = FALSE;
 	PrecisionTimer_Construct( &timer );
 
 	if( !s_initialize_succeed || pcePadGet() & TRG_D )
@@ -177,13 +236,26 @@ void pceAppProc( int cnt )
 	
 	if( pcePadGet() & TRG_LF )
 	{
-		if( MoveLeft() )
-		{
-			AddRandomPanel();
-			pceLCDPaint( 0, 0, 0, DISP_X, DISP_Y );
-			DrawGrid();
-			DrawScore();
-		}
+		moved = MoveLeft();
+	}
+	else if( pcePadGet() & TRG_RI )
+	{
+		moved = MoveRight();
+	}
+	else if( pcePadGet() & TRG_UP )
+	{
+		moved = MoveUp();
+	}
+	else if( pcePadGet() & TRG_DN )
+	{
+		moved = MoveDown();
+	}
+	if( moved )
+	{
+		AddRandomPanel();
+		pceLCDPaint( 0, 0, 0, DISP_X, DISP_Y );
+		DrawGrid();
+		DrawScore();
 	}
 	
 	pceLCDPaint( 0, 0, 80, DISP_X, 8 );
