@@ -2,40 +2,35 @@
 
 static BOOL s_initialize_succeed = FALSE;
 
-extern BYTE GRP[];
-static PIECE_BMP s_bmp;
+extern BYTE PANEL[], PANEL_ANIM[];
+static UnitedPieceBmp s_panel_bmp, s_panel_anim_bmp;
+static PieceBmpAnimation s_panel_anim;
+static int const s_period = 33;
 
 PrecisionTimer g_timer;
 unsigned long g_period_us, g_proc_us;
+
+static void SetupUnitedPieceBmp( UnitedPieceBmp* p, BYTE* source )
+{
+	static int const s_width = 22;
+	UnitedPieceBmp_Construct( p, source, s_width, s_width );
+}
 
 /// èâä˙âª.
 void pceAppInit( void )
 {
 	FramObject_Init();
-	pceAppSetProcPeriod( 33 );
+	pceAppSetProcPeriod( s_period );
 	Configure_Init();
 	FontProxy_Hook_Set();
-	FontExtend_Hook_GetAdrs();
 	
 	if( Lcd_Init() )
 	{
-		if( Ldirect_Init() )
-		{
-			PieceBmp_Construct( &s_bmp, FilePack_Data( "B001000.pgx", GRP ) );
-			Ldirect_DrawObject( &s_bmp, 0, 0, 0, 0, s_bmp.header.w, s_bmp.header.h );
-			Ldirect_VBuffView( TRUE );
-			
-			FontFuchi_SetType( 0 );
-			FontFuchi_SetTxColor( 0 );
-			FontFuchi_SetBdColor( 3 );
-			FontFuchi_SetPos( 1, 1 );
-			FontFuchi_SetRange( 1, 0, DISP_X - 1, DISP_Y - 1 );
-			FontFuchi_Printf( "Hello, World\n"
-								"\xF0\x40\xF0\x41\xF0\x42\xF0\x46\xF0\x47" );
-			PrecisionTimer_Construct( &g_timer );
-			
-			s_initialize_succeed = TRUE;
-		}
+		SetupUnitedPieceBmp( &s_panel_bmp, PANEL );
+		SetupUnitedPieceBmp( &s_panel_anim_bmp, PANEL_ANIM );
+		PrecisionTimer_Construct( &g_timer );
+		
+		s_initialize_succeed = TRUE;
 	}
 }
 
@@ -55,8 +50,8 @@ void pceAppProc( int cnt )
 	FontFuchi_SetPos( 1, 80 );
 	FontFuchi_Printf( "%6lu/%6luus FREE:%8d", g_proc_us, g_period_us, pceHeapGetMaxFreeSize() );
 	
-	Ldirect_Update();
-	Ldirect_Trans();
+	Lcd_Update();
+	Lcd_Trans();
 
 	g_period_us = PrecisionTimer_Count( &g_timer );
 	g_proc_us = PrecisionTimer_Count( &timer );
@@ -65,7 +60,6 @@ void pceAppProc( int cnt )
 /// èIóπ.
 void pceAppExit( void )
 {
-	FontExtend_Unhook_GetAdrs();
 	FontProxy_Unhook_Set();
 	Configure_Exit();
 }
