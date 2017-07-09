@@ -238,6 +238,7 @@ void pceAppInit( void )
 		SetupUnitedPieceBmp( &s_panel_bmp, PANEL );
 		SetupUnitedPieceBmp( &s_panel_anim_bmp, PANEL_ANIM );
 		InitGrid();
+		s_phase = Phase_Title;
 		DrawGrid();
 		DrawScore();
 		PrecisionTimer_Construct( &g_timer );
@@ -314,6 +315,13 @@ void pceAppProc( int cnt )
 	switch( s_phase )
 	{
 	case Phase_Title:
+		FontFuchi_SetType( 1 );
+		FontFuchi_SetPos( 8, 24 );
+		FontFuchi_PutStr( "2048 for P/ECE" );
+		FontFuchi_SetType( 0 );
+		FontFuchi_SetPos( 9, 54 );
+		FontFuchi_PutStr( "PUSH A BUTTON TO START" );
+		break;
 	case Phase_Game:
 		break;
 	case Phase_GameOver:
