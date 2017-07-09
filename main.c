@@ -8,9 +8,6 @@ static PieceBmpAnimation s_panel_anim;
 static int const s_panel_width = 22;
 static int const s_period = 33;
 
-PrecisionTimer g_timer;
-unsigned long g_period_us, g_proc_us;
-
 #define GRID_WIDTH (4)
 static int s_grid[GRID_WIDTH * GRID_WIDTH];
 static int s_adding_panel;
@@ -262,7 +259,6 @@ void pceAppInit( void )
 		s_phase = Phase_Title;
 		DrawGrid();
 		DrawScore();
-		PrecisionTimer_Construct( &g_timer );
 		
 		s_initialize_succeed = TRUE;
 	}
@@ -271,9 +267,7 @@ void pceAppInit( void )
 /// ÉÅÉCÉì.
 void pceAppProc( int cnt )
 {
-	PrecisionTimer timer;
 	BOOL moved = FALSE;
-	PrecisionTimer_Construct( &timer );
 
 	if( !s_initialize_succeed || pcePadGet() & TRG_D )
 	{
@@ -365,16 +359,10 @@ void pceAppProc( int cnt )
 		DrawRestartMessage();
 		break;
 	}
-	FontFuchi_SetType( 2 );
-	FontFuchi_SetPos( 1, 80 );
-	FontFuchi_Printf( "%6lu/%6luus FREE:%8d", g_proc_us, g_period_us, pceHeapGetMaxFreeSize() );
 	
 	Lcd_Update();
 	Lcd_Trans();
 	rand(); // ãÛâÒÇµ
-
-	g_period_us = PrecisionTimer_Count( &g_timer );
-	g_proc_us = PrecisionTimer_Count( &timer );
 }
 
 /// èIóπ.
