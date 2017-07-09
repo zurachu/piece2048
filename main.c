@@ -5,15 +5,51 @@ static BOOL s_initialize_succeed = FALSE;
 extern BYTE PANEL[], PANEL_ANIM[];
 static UnitedPieceBmp s_panel_bmp, s_panel_anim_bmp;
 static PieceBmpAnimation s_panel_anim;
+static int const s_panel_width = 22;
 static int const s_period = 33;
 
 PrecisionTimer g_timer;
 unsigned long g_period_us, g_proc_us;
 
+#define GRID_WIDTH (4)
+int s_grid[GRID_WIDTH * GRID_WIDTH];
+int s_score;
+
 static void SetupUnitedPieceBmp( UnitedPieceBmp* p, BYTE* source )
 {
-	static int const s_width = 22;
-	UnitedPieceBmp_Construct( p, source, s_width, s_width );
+	UnitedPieceBmp_Construct( p, source, s_panel_width, s_panel_width );
+}
+
+void InitGrid( void )
+{
+	int i;
+	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
+	{
+		s_grid[i] = 0;
+	}
+	s_score = 0;
+}
+
+void DrawGrid( void )
+{
+	int i;
+	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
+	{
+		int const x = i % GRID_WIDTH;
+		int const y = i / GRID_WIDTH;
+		UnitedPieceBmp_Draw( &s_panel_bmp
+			, DISP_X / 2 + s_panel_width * ( x - GRID_WIDTH / 2 )
+			, s_panel_width * y
+			, s_grid[i], DRW_NOMAL );
+	}
+}
+
+void DrawScore( void )
+{
+	FontProxy_SetType( 2 );
+	pceFontSetPos( 0, 0 );
+	pceFontPutStr( "SCORE\n" );
+	pceFontPrintf( "%5d", s_score );
 }
 
 /// ‰Šú‰».
@@ -28,6 +64,9 @@ void pceAppInit( void )
 	{
 		SetupUnitedPieceBmp( &s_panel_bmp, PANEL );
 		SetupUnitedPieceBmp( &s_panel_anim_bmp, PANEL_ANIM );
+		InitGrid();
+		DrawGrid();
+		DrawScore();
 		PrecisionTimer_Construct( &g_timer );
 		
 		s_initialize_succeed = TRUE;
