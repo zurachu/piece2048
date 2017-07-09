@@ -13,6 +13,7 @@ unsigned long g_period_us, g_proc_us;
 
 #define GRID_WIDTH (4)
 static int s_grid[GRID_WIDTH * GRID_WIDTH];
+static int s_adding_panel;
 static int s_score;
 
 static int pow2( int n )
@@ -107,12 +108,17 @@ static void DrawGrid( void )
 	int i;
 	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
 	{
-		int const x = i % GRID_WIDTH;
-		int const y = i / GRID_WIDTH;
-		UnitedPieceBmp_Draw( &s_panel_bmp
-			, DISP_X / 2 + s_panel_width * ( x - GRID_WIDTH / 2 )
-			, s_panel_width * y
-			, s_grid[i], DRW_NOMAL );
+		int const x = DISP_X / 2 + s_panel_width * ( ( i % GRID_WIDTH ) - GRID_WIDTH / 2 );
+		int const y = s_panel_width * ( i / GRID_WIDTH );
+		if( i == s_adding_panel
+			&& PieceBmpAnimation_Playing( &s_panel_anim ) )
+		{
+			PieceBmpAnimation_Draw( &s_panel_anim, x, y, DRW_NOMAL );
+		}
+		else
+		{
+			UnitedPieceBmp_Draw( &s_panel_bmp, x, y, s_grid[i], DRW_NOMAL );
+		}
 	}
 }
 
@@ -132,6 +138,7 @@ static void StartGame( void )
 	{
 		AddRandomPanel();
 	}
+	PieceBmpAnimation_Clear( &s_panel_anim );
 }
 
 static BOOL MoveLeft( void )
@@ -229,36 +236,46 @@ void pceAppProc( int cnt )
 	if( pcePadGet() & TRG_A )
 	{
 		StartGame();
-		pceLCDPaint( 0, 0, 0, DISP_X, DISP_Y );
-		DrawGrid();
-		DrawScore();
 	}
 	
-	if( pcePadGet() & TRG_LF )
+
+	if( PieceBmpAnimation_Playing( &s_panel_anim ) )
 	{
-		moved = MoveLeft();
+		if( PieceBmpAnimation_IsEnd( &s_panel_anim ) )
+		{
+			PieceBmpAnimation_Clear( &s_panel_anim );
+		}
+		PieceBmpAnimation_Update( &s_panel_anim, s_period );
 	}
-	else if( pcePadGet() & TRG_RI )
+	else
 	{
-		moved = MoveRight();
-	}
-	else if( pcePadGet() & TRG_UP )
-	{
-		moved = MoveUp();
-	}
-	else if( pcePadGet() & TRG_DN )
-	{
-		moved = MoveDown();
-	}
-	if( moved )
-	{
-		AddRandomPanel();
-		pceLCDPaint( 0, 0, 0, DISP_X, DISP_Y );
-		DrawGrid();
-		DrawScore();
+		if( pcePadGet() & TRG_LF )
+		{
+			moved = MoveLeft();
+		}
+		else if( pcePadGet() & TRG_RI )
+		{
+			moved = MoveRight();
+		}
+		else if( pcePadGet() & TRG_UP )
+		{
+			moved = MoveUp();
+		}
+		else if( pcePadGet() & TRG_DN )
+		{
+			moved = MoveDown();
+		}
+		if( moved )
+		{
+			s_adding_panel = AddRandomPanel();
+			PieceBmpAnimation_StartToEnd( &s_panel_anim, &s_panel_anim_bmp
+				, s_period, FALSE );
+		}
 	}
 	
-	pceLCDPaint( 0, 0, 80, DISP_X, 8 );
+	pceLCDPaint( 0, 0, 0, DISP_X, DISP_Y );
+	DrawGrid();
+	DrawScore();
 	FontFuchi_SetType( 2 );
 	FontFuchi_SetPos( 1, 80 );
 	FontFuchi_Printf( "%6lu/%6luus FREE:%8d", g_proc_us, g_period_us, pceHeapGetMaxFreeSize() );
