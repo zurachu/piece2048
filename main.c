@@ -30,6 +30,37 @@ static void InitGrid( void )
 	s_score = 0;
 }
 
+static int NumEmptyGrids( void )
+{
+	int num_empty = 0, i;
+	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
+	{
+		if( s_grid[i] == 0 )
+		{
+			++num_empty;
+		}
+	}
+	return num_empty;
+}
+
+static int AddRandomPanel( void )
+{
+	int rest = rand() % NumEmptyGrids(), i;
+	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
+	{
+		if( s_grid[i] == 0 )
+		{
+			if( rest <= 0 )
+			{
+				break;
+			}
+			--rest;
+		}
+	}
+	s_grid[i] = ( rand() % 10 < 1 ) ? 2 : 1; // 4:2 = 1:9
+	return i;
+}
+
 static void DrawGrid( void )
 {
 	int i;
@@ -50,6 +81,16 @@ static void DrawScore( void )
 	pceFontSetPos( 0, 0 );
 	pceFontPutStr( "SCORE\n" );
 	pceFontPrintf( "%5d", s_score );
+}
+
+static void StartGame( void )
+{
+	int i;
+	InitGrid();
+	for( i = 0; i < 2; i++ )
+	{
+		AddRandomPanel();
+	}
 }
 
 /// ‰Šú‰».
@@ -84,6 +125,14 @@ void pceAppProc( int cnt )
 		pceAppReqExit( 0 );
 	}
 	
+	if( pcePadGet() & TRG_A )
+	{
+		StartGame();
+		pceLCDPaint( 0, 0, 0, DISP_X, DISP_Y );
+		DrawGrid();
+		DrawScore();
+	}
+	
 	pceLCDPaint( 0, 0, 80, DISP_X, 8 );
 	FontFuchi_SetType( 2 );
 	FontFuchi_SetPos( 1, 80 );
@@ -91,6 +140,7 @@ void pceAppProc( int cnt )
 	
 	Lcd_Update();
 	Lcd_Trans();
+	rand(); // ‹ó‰ñ‚µ
 
 	g_period_us = PrecisionTimer_Count( &g_timer );
 	g_proc_us = PrecisionTimer_Count( &timer );
