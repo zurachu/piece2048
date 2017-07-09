@@ -15,6 +15,16 @@ unsigned long g_period_us, g_proc_us;
 static int s_grid[GRID_WIDTH * GRID_WIDTH];
 static int s_score;
 
+static int pow2( int n )
+{
+	int result = 1, i;
+	for( i = 0; i < n; i++ )
+	{
+		result *= 2;
+	}
+	return result;
+}
+
 static void SetupUnitedPieceBmp( UnitedPieceBmp* p, BYTE* source )
 {
 	UnitedPieceBmp_Construct( p, source, s_panel_width, s_panel_width );
@@ -93,6 +103,38 @@ static void StartGame( void )
 	}
 }
 
+static BOOL MoveLeft( void )
+{
+	BOOL moved = FALSE;
+	int x, xx, y;
+	for( y = 0; y < GRID_WIDTH; y++ )
+	{
+		for( x = 0; x < GRID_WIDTH; x++ )
+		{
+			for( xx = x + 1; xx < GRID_WIDTH && s_grid[xx + GRID_WIDTH * y] == 0; xx++ ) {}
+			if( GRID_WIDTH <= xx )
+			{
+				break;
+			}
+			if( s_grid[x + GRID_WIDTH * y] == 0 )
+			{
+				s_grid[x + GRID_WIDTH * y] = s_grid[xx + GRID_WIDTH * y];
+				s_grid[xx + GRID_WIDTH * y] = 0;
+				--x;
+				moved = TRUE;
+			}
+			else if( s_grid[x + GRID_WIDTH * y] == s_grid[xx + GRID_WIDTH * y] )
+			{
+				++s_grid[x + GRID_WIDTH * y];
+				s_grid[xx + GRID_WIDTH * y] = 0;
+				s_score += pow2( s_grid[x + GRID_WIDTH * y] );
+				moved = TRUE;
+			}
+		}
+	}
+	return moved;
+}
+
 /// ‰Šú‰».
 void pceAppInit( void )
 {
@@ -131,6 +173,17 @@ void pceAppProc( int cnt )
 		pceLCDPaint( 0, 0, 0, DISP_X, DISP_Y );
 		DrawGrid();
 		DrawScore();
+	}
+	
+	if( pcePadGet() & TRG_LF )
+	{
+		if( MoveLeft() )
+		{
+			AddRandomPanel();
+			pceLCDPaint( 0, 0, 0, DISP_X, DISP_Y );
+			DrawGrid();
+			DrawScore();
+		}
 	}
 	
 	pceLCDPaint( 0, 0, 80, DISP_X, 8 );
