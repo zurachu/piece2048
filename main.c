@@ -12,15 +12,15 @@ PrecisionTimer g_timer;
 unsigned long g_period_us, g_proc_us;
 
 #define GRID_WIDTH (4)
-int s_grid[GRID_WIDTH * GRID_WIDTH];
-int s_score;
+static int s_grid[GRID_WIDTH * GRID_WIDTH];
+static int s_score;
 
 static void SetupUnitedPieceBmp( UnitedPieceBmp* p, BYTE* source )
 {
 	UnitedPieceBmp_Construct( p, source, s_panel_width, s_panel_width );
 }
 
-void InitGrid( void )
+static void InitGrid( void )
 {
 	int i;
 	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
@@ -30,7 +30,7 @@ void InitGrid( void )
 	s_score = 0;
 }
 
-void DrawGrid( void )
+static void DrawGrid( void )
 {
 	int i;
 	for( i = 0; i < GRID_WIDTH * GRID_WIDTH; i++ )
@@ -44,7 +44,7 @@ void DrawGrid( void )
 	}
 }
 
-void DrawScore( void )
+static void DrawScore( void )
 {
 	FontProxy_SetType( 2 );
 	pceFontSetPos( 0, 0 );
