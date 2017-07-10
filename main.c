@@ -37,7 +37,7 @@ static void DrawGrid( void )
 		if( i == s_adding_panel
 			&& PieceBmpAnimation_Playing( &s_panel_anim ) )
 		{
-			PieceBmpAnimation_Draw( &s_panel_anim, x, y, DRW_NOMAL );
+			PieceBmpAnimation_Draw( &s_panel_anim, x, y, DRW_CLR( COLOR_BLACK, COLOR_WHITE ) );
 		}
 		else
 		{
