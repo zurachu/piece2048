@@ -247,11 +247,11 @@ static int put_str( int type, char const* p )
 		{
 			break;
 		}
-		else if( ( 0x81 <= ch && ch <= 0x9f ) || ( 0xE0 <= ch && ch <= 0xfc ) ) // ‘SŠp
+		else if( ( 0x81 <= ch && ch <= 0x9F ) || ( 0xE0 <= ch && ch <= 0xFC ) ) // ‘SŠp
 		{
 			if( *p )
 			{
-				unsigned short code =  ( ch << 8 ) | *p++;
+				unsigned short const code = ( ch << 8 ) | (unsigned char)*p++;
 				m.s = ( type )? put_moji( x, y, code ) : put_fuchi( x, y, code );
 				x += m.b.w;
 			}
